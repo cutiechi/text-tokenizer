@@ -1,4 +1,4 @@
-FROM rust:nightly AS builder
+FROM rustlang/rust:nightly-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN cargo build --release
@@ -11,4 +11,4 @@ COPY --from=builder /app/Cargo.toml /app/Cargo.toml
 COPY --from=builder /app/Cargo.lock /app/Cargo.lock
 COPY --from=builder /app/src /app/src
 EXPOSE 3000
-CMD ["/app/text-tokenizer", "serve"] 
+CMD ["/app/text-tokenizer", "serve"]
