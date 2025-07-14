@@ -1,14 +1,14 @@
 FROM rustlang/rust:nightly-bullseye AS builder
 WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release
 COPY . .
 RUN cargo build --release
+RUN strip /app/target/release/text-tokenizer || true
 
-FROM debian:bookworm-slim
+FROM gcr.io/distroless/cc-debian12
 WORKDIR /app
-RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/text-tokenizer /app/text-tokenizer
-COPY --from=builder /app/Cargo.toml /app/Cargo.toml
-COPY --from=builder /app/Cargo.lock /app/Cargo.lock
-COPY --from=builder /app/src /app/src
 EXPOSE 3000
 CMD ["/app/text-tokenizer", "serve"]
