@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly-alpine AS builder
+FROM rustlang/rust:nightly-bullseye AS builder
 WORKDIR /app
 COPY . .
 RUN cargo build --release
