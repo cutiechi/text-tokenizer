@@ -1,3 +1,4 @@
+mod db;
 mod tokenizer;
 use anyhow::Result;
 use axum::{Json, Router, http::StatusCode, routing::post};
@@ -34,6 +35,11 @@ async fn main() -> anyhow::Result<()> {
     match cli.command {
         Some(Command::Tokenize { path }) => {
             let result = tokenizer::tokenize(&path).await?;
+
+            if let Ok(file) = db::file::create(&path).await {
+                db::token::save_all(result.words.clone(), file.id).await?;
+            }
+
             println!("{}", serde_json::to_string_pretty(&result)?);
         }
         _ => {
@@ -55,6 +61,17 @@ async fn tokenize(
             format!("Failed to tokenize file: {}", e),
         )
     })?;
+
+    if let Ok(file) = db::file::create(&payload.path).await {
+        db::token::save_all(result.words.clone(), file.id)
+            .await
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to save tokens: {}", e),
+                )
+            })?;
+    }
 
     Ok(Json(result))
 }
